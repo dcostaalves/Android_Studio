@@ -1,0 +1,66 @@
+
+
+
+1) faz a class de tarefas funcionar 
+	-add dependencias do ROON no build module
+	-add em cima da class Tarefas, @Entity(tableName="tarefa_table")
+	-add dentro da class Tarefas, @PrimaryKey(autoGenerate = true)
+
+2) em pacote Data cria uma interface TarefaDao
+	-faz uma anotaçãp @Dao, em cima da tarefa
+	-Implentou isert, query, update e delete
+
+3) em pcte de DATA cria uma Class TarefaDataBase
+
+4) No Repositorio coloca as requisições do Retroit + requisições da room
+	-instacia a dao no Class Repository(privete val tarefaDao: TarefaDao)
+	-busca os metódos de interface
+
+5) em TarefaDataBase insere as anotações @Provides + @Singleton
+	-cria fun provideDao(@ApplicationContext context: Context): TarefaDao{ TarefaDataBase.getDatabase(context).TarefaDao()
+
+6) na class MainViewModel
+	-comentou uma parte
+	-criou uma lateinit val myQueryResponse: Flow<List<Tarefas>> //obs usar Flow<T> do Kotlin Corrotine
+	-mudou funções do init
+	-no init incluiu viewModelScope.launch{ myQueryResponse = repository.queyAllTarefas()}
+	-na fun listTarefas(){ viewModelScope.lauch{try{val response = repository.listTarefas()if(response.isSuccessful){
+		val listTarefas = response.body()!! , for(tarefa in listTarefas){ val findTarefa = repository.queryById(tarefa.id)
+		if(findTarefas.first()!= null){repository.update(tarefa)}else { repository.insertTarefa(tarefa)
+		}}}else { Log.d("Developer", "Algo deu errado" $)}cath(e: Exception){ Log.d("Developer", e.message.toString())}
+
+7) em ListFragment
+	-lifecycleScope.launch{ mainViewModel.myQueryResponse.collect{ response -> adapter.setData(response)} }
+
+8) em fun addTarefa (tarefas: Tarefas){ viewModelScope.lauch{ try{ val response =repository.addTarefa(tarefas)
+		if (response.isSuccessful){ repository.insertTarefa(tarefas)}else {repository.insertTarefa(tarefas)}
+
+		}catch (e: Exception){
+
+9) fun updateTarefa(tarefas:Tarefas){ viewModelScop.lauch{ try{repository.updateTarefas(tarefas),
+		 repository.updateRoom(tarefas)} catch (e: Exception)[repository.updateRoom(tarefas)*
+
+	-*obs no 3 videoem 10 min (atualizações) e 12:00 min
+
+10) em fun deleteTarefa(valor:Int){ viewModelScop.lauch{ try{repository.deleteTarefa(tarefas.id)*, repository.deleteTarefaRoom*(tarefas)*
+		}catch (e: Exception){repository.deleteTarefaRoom(tarefas)}
+
+	-*obs video 14:20 min -obs 16:00 min
+
+
+
+Resumo (Henrique) Retrofit com Room
+
+
+- Implementar as dependências do Room, Coroutines e lifecycle
+- Adaptar a Entity para ser uma entidade tanto para o Retrofit quanto para o Room
+- Criar a Dao e inserir todas as querys
+- Implementar o DataBase
+- Adicionar o que falta dentro da classe Repository
+- Adicionar o que falta dentro da ServiceModule (ou seja, para fazer as injeções de dependências sem problemas)
+- Alterar a lógica da ViewModel:
+ 1. No método listTarefa será necessário uma condição para quando chamarmos os itens da API, podermos salvá-los no banco de dados local
+ 2. No método addTarefa, precisamos nos certificar de adicionar a tarefa tanto no banco de dados remoto, quanto no local.
+ 3. No método de updateTarefa, precisamos nos certificar de atualizar a tarefa tanto no banco de dados remoto, quanto no local.
+ 4. No método de deleteTarefa, precisamos nos certificar de deletar a tarefa tanto no banco de dados remoto, quanto no local.
+
